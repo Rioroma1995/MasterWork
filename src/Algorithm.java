@@ -34,8 +34,9 @@ public class Algorithm {
                     matrixA[row][col] = path.get(col).get(row);
                 }
             }
-            if (checkedConditions(matrixA, sizeX1, y))
+            if (checkedConditions(matrixA, sizeX1, y)) {
                 calculate(matrixA, sizeX1, y, ck, ckj);
+            }
         }
     }
 
@@ -57,7 +58,7 @@ public class Algorithm {
     }
 
     private static List<Node> addBlockOfNodes(Node parentNode, List<Double>[][] a, int col) {
-        List array = new ArrayList<Node>();
+        List<Node> array = new ArrayList<>();
         for (int k = 0; k < countOfProductionMethods; ++k) {
             array.add(addInsideNodes(parentNode, a, col, k));
         }
@@ -65,7 +66,7 @@ public class Algorithm {
     }
 
     private static Node addInsideNodes(Node parentNode, List<Double>[][] a, int col, int insideCol) {
-        List array = new ArrayList<Double>(dimA);
+        List<Double> array = new ArrayList<>(dimA);
         for (int j = 0; j < dimA; ++j) {
             array.add(a[j][col].get(insideCol));
         }
@@ -86,9 +87,10 @@ public class Algorithm {
         List<Double>[][] a = new ArrayList[dimA][dimA];
         for (int i = 0; i < dimA; ++i) {
             for (int j = 0; j < dimA; ++j) {
-                a[i][j] = new ArrayList(countOfProductionMethods);
-                for (int k = 0; k < countOfProductionMethods; ++k)
+                a[i][j] = new ArrayList<>(countOfProductionMethods);
+                for (int k = 0; k < countOfProductionMethods; ++k) {
                     a[i][j].add(Math.random() / dimA);
+                }
             }
         }
         return a;
@@ -115,8 +117,9 @@ public class Algorithm {
             //Matrix.print(tempX);
             res = function(a, tempX, sizeX1, ck, ckj);
             //System.out.println("res: " + res);
-            if (res >= 0 && res < old_res && isProductionEnoughForConsumption(a, sizeX1, tempX, y) && isPollutionAllowed(a, sizeX1, tempX, y))
+            if (res >= 0 && res < old_res && isProductionEnoughForConsumption(a, sizeX1, tempX, y) && isPollutionAllowed(a, sizeX1, tempX, y)) {
                 x = tempX;
+            }
         }
         res = function(a, x, sizeX1, ck, ckj);
         if (res < finalRes) {
@@ -148,13 +151,17 @@ public class Algorithm {
 
     private static boolean isPollutionAllowed(double[][] a, int sizeX1, double[] x, double[] y) {
         double[] res = new double[sizeX1];
-        for (int i = sizeX1; i < a.length; ++i)
-            for (int j = 0; j < sizeX1; ++j)
+        for (int i = sizeX1; i < a.length; ++i) {
+            for (int j = 0; j < sizeX1; ++j) {
                 res[i - sizeX1] += a[i][j] * x[j];
+            }
+        }
         double[] tempRes = new double[sizeX1];
-        for (int i = sizeX1; i < a.length; ++i)
-            for (int j = sizeX1; j < a.length; ++j)
+        for (int i = sizeX1; i < a.length; ++i) {
+            for (int j = sizeX1; j < a.length; ++j) {
                 tempRes[i - sizeX1] += (1 - a[i][j]) * x[j];
+            }
+        }
         res = Matrix.subtract(tempRes, res);
         double res1 = 0;
         double res2 = 0;
