@@ -1,13 +1,11 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Algorithm {
-    static int dimA = 10;
-    static int countOfProductionMethods = 3;
-    static double[][] finalA;
-    static double finalRes = Double.MAX_VALUE;
-    static double[] finalX;
+    private static int dimA = 10;
+    private static int countOfProductionMethods = 3;
+    private static double[][] finalA;
+    private static double finalRes = Double.MAX_VALUE;
+    private static double[] finalX;
 
     public static void main(String[] args) {
         double[][] a11 = {{0.1, 0.2}, {0.5, 0.6}};
@@ -27,9 +25,9 @@ public class Algorithm {
         System.out.print("finalRes: " + finalRes);
     }
 
-    static double[] solve(List<Double>[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
-        ArrayList<ArrayList<ArrayList<Double>>> paths = workWithTree(a);
-        for (ArrayList<ArrayList<Double>> path : paths) {
+    private static void solve(List<Double>[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
+        List<List<List<Double>>> paths = workWithTree(a);
+        for (List<List<Double>> path : paths) {
             double[][] matrixA = new double[dimA][dimA];
             for (int col = 0; col < path.size(); ++col) {
                 for (int row = 0; row < path.get(col).size(); ++row) {
@@ -39,14 +37,13 @@ public class Algorithm {
             if (checkedConditions(matrixA, sizeX1, y))
                 calculate(matrixA, sizeX1, y, ck, ckj);
         }
-        return null;
     }
 
-    static ArrayList<ArrayList<ArrayList<Double>>> workWithTree(List<Double>[][] a) {
+    private static List<List<List<Double>>> workWithTree(List<Double>[][] a) {
         Tree tree = new Tree();
         tree.addRoot(new Node(null));
-        ArrayList<Node> nodes = new ArrayList<>();
-        ArrayList<Node> tempNodes = new ArrayList<>();
+        List<Node> nodes = new ArrayList<>();
+        List<Node> tempNodes = new ArrayList<>();
         nodes.add(tree.getRoot());
         for (int col = 0; col < dimA; ++col) {
             for (Node nod : nodes) {
@@ -59,16 +56,16 @@ public class Algorithm {
         return tree.printPaths(tree.getRoot());
     }
 
-    static ArrayList<Node> addBlockOfNodes(Node parentNode, List<Double>[][] a, int col) {
-        ArrayList array = new ArrayList<Node>();
+    private static List<Node> addBlockOfNodes(Node parentNode, List<Double>[][] a, int col) {
+        List array = new ArrayList<Node>();
         for (int k = 0; k < countOfProductionMethods; ++k) {
             array.add(addInsideNodes(parentNode, a, col, k));
         }
         return array;
     }
 
-    static Node addInsideNodes(Node parentNode, List<Double>[][] a, int col, int insideCol) {
-        ArrayList array = new ArrayList<Double>(dimA);
+    private static Node addInsideNodes(Node parentNode, List<Double>[][] a, int col, int insideCol) {
+        List array = new ArrayList<Double>(dimA);
         for (int j = 0; j < dimA; ++j) {
             array.add(a[j][col].get(insideCol));
         }
@@ -79,12 +76,13 @@ public class Algorithm {
 
     static double[] solve(double[][] a11, double[][] a12, double[][] a21, double[][] a22, int sizeX1, double[] y, double[] ck, double[] ckj) {
         double[][] a = Matrix.buildA(a11, a12, a21, a22);
-        if (checkedConditions(a, sizeX1, y))
+        if (checkedConditions(a, sizeX1, y)) {
             calculate(a, sizeX1, y, ck, ckj);
+        }
         return null;
     }
 
-    static List<Double>[][] generate() {
+    private static List<Double>[][] generate() {
         List<Double>[][] a = new ArrayList[dimA][dimA];
         for (int i = 0; i < dimA; ++i) {
             for (int j = 0; j < dimA; ++j) {
@@ -100,7 +98,7 @@ public class Algorithm {
         return isPositiveSolutionsExist(a, sizeX1, y) && isProductionEnoughForConsumption(a, sizeX1, y, y) && isPollutionAllowed(a, sizeX1, y, y);
     }
 
-    static double[] calculate(double[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
+    private static double[] calculate(double[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
         double[] x = y;
         double[] tempX;
         //знайшли початковий результат при х=у
@@ -129,7 +127,7 @@ public class Algorithm {
         return x;
     }
 
-    static double function(double[][] a, double[] x, int sizeX1, double[] ck, double[] ckj) {
+    private static double function(double[][] a, double[] x, int sizeX1, double[] ck, double[] ckj) {
         double res = 0;
         for (int i = 0; i < ck.length; ++i) {
             double tempRes = 0;
@@ -160,57 +158,71 @@ public class Algorithm {
         res = Matrix.subtract(tempRes, res);
         double res1 = 0;
         double res2 = 0;
-        for (int i = 0; i < res.length; i++)
+        for (int i = 0; i < res.length; i++) {
             res1 += res[i] * res[i];
+        }
         res1 = Math.sqrt(res1);
-        for (int i = sizeX1; i < y.length; i++)
+        for (int i = sizeX1; i < y.length; i++) {
             res2 += y[i] * y[i];
+        }
         res2 = Math.sqrt(res2);
-        if (res1 < res2)
+        if (res1 < res2) {
             return false;
+        }
         return true;
     }
 
     private static boolean isPositiveSolutionsExist(double[][] a, int sizeX1, double[] y) {
         double[] res = new double[sizeX1];
-        for (int i = sizeX1; i < a.length; i++)
-            for (int j = 0; j < sizeX1; j++)
+        for (int i = sizeX1; i < a.length; i++) {
+            for (int j = 0; j < sizeX1; j++) {
                 res[i - sizeX1] += a[i][j] * y[j];
+            }
+        }
         double res1 = 0;
         double res2 = 0;
-        for (int i = 0; i < res.length; i++)
+        for (int i = 0; i < res.length; i++) {
             res1 += res[i] * res[i];
+        }
         res1 = Math.sqrt(res1);
 
         for (int i = sizeX1; i < y.length; i++)
             res2 += y[i] * y[i];
         res2 = Math.sqrt(res2);
-        if (res1 < res2)
+        if (res1 < res2) {
             return false;
+        }
         return true;
     }
 
     private static boolean isProductionEnoughForConsumption(double[][] a, int sizeX1, double[] x, double[] y) {
         double[] res = new double[sizeX1];
-        for (int i = 0; i < sizeX1; i++)
-            for (int j = 0; j < sizeX1; j++)
+        for (int i = 0; i < sizeX1; i++) {
+            for (int j = 0; j < sizeX1; j++) {
                 res[i] += (1 - a[i][j]) * x[j];
+            }
+        }
         double[] tempRes = new double[sizeX1];
-        for (int i = 0; i < sizeX1; i++)
-            for (int j = sizeX1; j < a.length; j++)
+        for (int i = 0; i < sizeX1; i++) {
+            for (int j = sizeX1; j < a.length; j++) {
                 tempRes[i] += a[i][j] * x[j];
+            }
+        }
         res = Matrix.subtract(res, tempRes);
         double res1 = 0;
         double res2 = 0;
-        for (int i = 0; i < res.length; i++)
+        for (int i = 0; i < res.length; i++) {
             res1 += res[i] * res[i];
+        }
         res1 = Math.sqrt(res1);
 
-        for (int i = 0; i < sizeX1; i++)
+        for (int i = 0; i < sizeX1; i++) {
             res2 += y[i] * y[i];
+        }
         res2 = Math.sqrt(res2);
-        if (res1 < res2)
+        if (res1 < res2) {
             return false;
+        }
         return true;
     }
 }

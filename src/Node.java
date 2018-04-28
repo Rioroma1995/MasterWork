@@ -1,18 +1,19 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class Node {
-    private ArrayList<Double> value;
-    private ArrayList<Node> nodes;
+    private List<Double> value;
+    private List<Node> nodes;
 
-    public Node(ArrayList<Double> value) {
+    Node(List<Double> value) {
         this.value = value;
     }
 
-    public ArrayList<Node> getNodes() {
+    public List<Node> getNodes() {
         return nodes;
     }
 
-    public ArrayList<Double> getValue() {
+    public List<Double> getValue() {
         return value;
     }
 
