@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Algorithm {
     private static int dimA = 10;
@@ -17,7 +18,12 @@ public class Algorithm {
         double[] y = {4, 5, 3, 4, 5, 0.4, 0.6, 0.7, 0.3, 0.6};
         List<Double>[][] a = generate();
         int productTypes = 5;
+
+        long startTime = System.nanoTime();
         solve(a, productTypes, y, ck, ckj);
+        long endTime   = System.nanoTime();
+        System.out.println("Total time: " + TimeUnit.NANOSECONDS.toMillis(endTime - startTime));
+
         System.out.print("finalX: ");
         Matrix.print(finalX);
         System.out.println("finalA: ");
@@ -100,7 +106,7 @@ public class Algorithm {
         return isPositiveSolutionsExist(a, sizeX1, y) && isProductionEnoughForConsumption(a, sizeX1, y, y) && isPollutionAllowed(a, sizeX1, y, y);
     }
 
-    private static double[] calculate(double[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
+    private static void calculate(double[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
         double[] x = y;
         double[] tempX;
         //знайшли початковий результат при х=у
@@ -127,7 +133,6 @@ public class Algorithm {
             finalA = a;
             finalX = x;
         }
-        return x;
     }
 
     private static double function(double[][] a, double[] x, int sizeX1, double[] ck, double[] ckj) {
@@ -165,18 +170,15 @@ public class Algorithm {
         res = Matrix.subtract(tempRes, res);
         double res1 = 0;
         double res2 = 0;
-        for (int i = 0; i < res.length; i++) {
-            res1 += res[i] * res[i];
+        for (double re : res) {
+            res1 += re * re;
         }
         res1 = Math.sqrt(res1);
         for (int i = sizeX1; i < y.length; i++) {
             res2 += y[i] * y[i];
         }
         res2 = Math.sqrt(res2);
-        if (res1 < res2) {
-            return false;
-        }
-        return true;
+        return !(res1 < res2);
     }
 
     private static boolean isPositiveSolutionsExist(double[][] a, int sizeX1, double[] y) {
@@ -188,18 +190,16 @@ public class Algorithm {
         }
         double res1 = 0;
         double res2 = 0;
-        for (int i = 0; i < res.length; i++) {
-            res1 += res[i] * res[i];
+        for (double re : res) {
+            res1 += re * re;
         }
         res1 = Math.sqrt(res1);
 
-        for (int i = sizeX1; i < y.length; i++)
+        for (int i = sizeX1; i < y.length; i++) {
             res2 += y[i] * y[i];
-        res2 = Math.sqrt(res2);
-        if (res1 < res2) {
-            return false;
         }
-        return true;
+        res2 = Math.sqrt(res2);
+        return !(res1 < res2);
     }
 
     private static boolean isProductionEnoughForConsumption(double[][] a, int sizeX1, double[] x, double[] y) {
@@ -218,8 +218,8 @@ public class Algorithm {
         res = Matrix.subtract(res, tempRes);
         double res1 = 0;
         double res2 = 0;
-        for (int i = 0; i < res.length; i++) {
-            res1 += res[i] * res[i];
+        for (double re : res) {
+            res1 += re * re;
         }
         res1 = Math.sqrt(res1);
 
@@ -227,9 +227,6 @@ public class Algorithm {
             res2 += y[i] * y[i];
         }
         res2 = Math.sqrt(res2);
-        if (res1 < res2) {
-            return false;
-        }
-        return true;
+        return !(res1 < res2);
     }
 }

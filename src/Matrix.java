@@ -1,7 +1,7 @@
 public class Matrix {
 
     // return c = a + b
-    public static double[] add(double[] a, double[] b) {
+    static double[] add(double[] a, double[] b) {
         int m = a.length;
         double[] c = new double[m];
         for (int i = 0; i < m; i++) {
@@ -11,7 +11,7 @@ public class Matrix {
     }
 
     // return c = a - b
-    public static double[] subtract(double[] a, double[] b) {
+    static double[] subtract(double[] a, double[] b) {
         int m = a.length;
         double[] c = new double[m];
         for (int i = 0; i < m; i++) {
@@ -39,7 +39,7 @@ public class Matrix {
     }
 
     // matrix-vector multiplication (y = A * x)
-    public static double[] multiply(double[][] a, double[] x) {
+    static double[] multiply(double[][] a, double[] x) {
         int m = a.length;
         int n = a[0].length;
         if (x.length != n) throw new RuntimeException("Illegal matrix dimensions.");
@@ -52,7 +52,7 @@ public class Matrix {
         return y;
     }
 
-    public static void print(double[][] a) {
+    static void print(double[][] a) {
         int m = a.length;
         int n = a[0].length;
         for (int i = 0; i < m; i++) {
@@ -64,7 +64,7 @@ public class Matrix {
         System.out.println();
     }
 
-    public static void print(double[] a) {
+    static void print(double[] a) {
         for (double anA : a) {
             System.out.print(anA + "\t");
         }
@@ -83,22 +83,24 @@ public class Matrix {
         return b;
     }
 
-    public static double[][] buildA(double[][] a11, double[][] a12, double[][] a21, double[][] a22) {
+    static double[][] buildA(double[][] a11, double[][] a12, double[][] a21, double[][] a22) {
         int col = a11.length + a21.length;
         int row = a11[0].length + a12[0].length;
         double[][] c = new double[col][row];
         for (int i = 0; i < col; i++) {
             for (int j = 0; j < row; j++) {
                 if (i < a11.length) {
-                    if (j < a11[0].length)
+                    if (j < a11[0].length) {
                         c[i][j] = a11[i][j];
-                    else
+                    } else {
                         c[i][j] = a12[i][j - a11[0].length];
+                    }
                 } else {
-                    if (j < a11[0].length)
+                    if (j < a11[0].length) {
                         c[i][j] = a21[i - a11.length][j];
-                    else
+                    } else {
                         c[i][j] = a22[i - a11.length][j - a11[0].length];
+                    }
                 }
             }
         }

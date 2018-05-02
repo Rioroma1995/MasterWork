@@ -5,11 +5,11 @@ class Tree {
     private Node root;
     private List<List<List<Double>>> finalPaths = new ArrayList<>();
 
-    public void addRoot(Node root) {
+    void addRoot(Node root) {
         this.root = root;
     }
 
-    public Node getRoot() {
+    Node getRoot() {
         return root;
     }
 
