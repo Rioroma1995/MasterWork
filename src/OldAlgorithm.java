@@ -1,51 +1,49 @@
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class Algorithm {
-    private static int dimA = 10;
+public class OldAlgorithm {
+   /* private static int dimA = 10;
     private static int countOfProductionMethods = 3;
+    private static double[][] finalA;
+    private static double finalRes = Double.MAX_VALUE;
+    private static double[] finalX;
 
     public static void main(String[] args) {
+        double[][] a11 = {{0.1, 0.2}, {0.5, 0.6}};
+        double[][] a12 = {{0.3, 0.4}, {0.7, 0.8}};
+        double[][] a21 = {{0.11, 0.12}, {0.15, 0.16}};
+        double[][] a22 = {{0.13, 0.14}, {0.17, 0.18}};
         double[] ck = {1.5, 1, 0.7, 2, 1.4};
         double[] ckj = {0.2, 0.4, 0.3, 0.2, 0.2};
         double[] y = {4, 5, 3, 4, 5, 0.4, 0.6, 0.7, 0.3, 0.6};
         List<Double>[][] a = generate();
-        int productTypes = dimA / 2;
+        int productTypes = 5;
 
         long startTime = System.nanoTime();
-        Optional<Result> result = solve(a, productTypes, y, ck, ckj);
-        long endTime = System.nanoTime();
+        solve(a, productTypes, y, ck, ckj);
+        long endTime   = System.nanoTime();
         System.out.println("Total time: " + TimeUnit.NANOSECONDS.toMillis(endTime - startTime));
 
-        result.ifPresent(res -> {
-            System.out.print("finalX: ");
-            Matrix.print(res.getVectorX());
-            System.out.println("finalA: ");
-            Matrix.print(res.getMatrixA());
-            System.out.print("finalRes: " + res.getResult());
-        });
+        System.out.print("finalX: ");
+        Matrix.print(finalX);
+        System.out.println("finalA: ");
+        Matrix.print(finalA);
+        System.out.print("finalRes: " + finalRes);
     }
 
-    private static Optional<Result> solve(List<Double>[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
-        long time = System.nanoTime();
+    private static void solve(List<Double>[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
         List<List<List<Double>>> paths = workWithTree(a);
-        System.out.println("PATHS time = " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - time));
-        time = System.nanoTime();
-        Optional<Result> reduce = paths.parallelStream()
-                .map(path -> {
-                    double[][] matrixA = new double[dimA][dimA];
-                    for (int col = 0; col < path.size(); ++col) {
-                        for (int row = 0; row < path.get(col).size(); ++row) {
-                            matrixA[row][col] = path.get(col).get(row);
-                        }
-                    }
-                    return checkedConditions(matrixA, sizeX1, y) ? calculate(matrixA, sizeX1, y, ck, ckj) : null;
-                })
-                .filter(Objects::nonNull)
-                .reduce((result, result2) -> result.getResult() < result2.getResult() ? result : result2);
-        System.out.println("STREAMS time = " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - time));
-
-        return reduce;
+        for (List<List<Double>> path : paths) {
+            double[][] matrixA = new double[dimA][dimA];
+            for (int col = 0; col < path.size(); ++col) {
+                for (int row = 0; row < path.get(col).size(); ++row) {
+                    matrixA[row][col] = path.get(col).get(row);
+                }
+            }
+            if (checkedConditions(matrixA, sizeX1, y)) {
+                calculate(matrixA, sizeX1, y, ck, ckj);
+            }
+        }
     }
 
     private static List<List<List<Double>>> workWithTree(List<Double>[][] a) {
@@ -93,13 +91,11 @@ public class Algorithm {
 
     private static List<Double>[][] generate() {
         List<Double>[][] a = new ArrayList[dimA][dimA];
-        double l = 0;
         for (int i = 0; i < dimA; ++i) {
             for (int j = 0; j < dimA; ++j) {
                 a[i][j] = new ArrayList<>(countOfProductionMethods);
                 for (int k = 0; k < countOfProductionMethods; ++k) {
-                    a[i][j].add(l++);
-                    //a[i][j].add(Math.random() / dimA);
+                    a[i][j].add(Math.random() / dimA);
                 }
             }
         }
@@ -107,24 +103,36 @@ public class Algorithm {
     }
 
     private static boolean checkedConditions(double[][] a, int sizeX1, double[] y) {
-        return positiveSolutionsExist(a, sizeX1, y) && productionEnoughForConsumption(a, sizeX1, y, y) && pollutionLevelAllowed(a, sizeX1, y, y);
+        return isPositiveSolutionsExist(a, sizeX1, y) && isProductionEnoughForConsumption(a, sizeX1, y, y) && isPollutionAllowed(a, sizeX1, y, y);
     }
 
-    private static Result calculate(double[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
+    private static void calculate(double[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
         double[] x = y;
         double[] tempX;
-        double bestRes = function(a, x, sizeX1, ck, ckj); //initial res when х=у
-        double temp_res;
-        final double eps = 0.05;
-        do {
-            tempX = Matrix.add(Matrix.multiply(a, x), y); //x=Ax+y
-            temp_res = function(a, tempX, sizeX1, ck, ckj);
-            if (temp_res >= 0 && temp_res < bestRes && productionEnoughForConsumption(a, sizeX1, tempX, y) && pollutionLevelAllowed(a, sizeX1, tempX, y)) {
+        //знайшли початковий результат при х=у
+        double res = function(a, x, sizeX1, ck, ckj);
+        //System.out.println("initial res: " + res);
+        double old_res = Double.MAX_VALUE;
+        double eps = 0.005;
+        while (old_res - res > eps) {
+            old_res = res;
+            //System.out.println("");
+            //x=Ax+y
+            tempX = Matrix.add(Matrix.multiply(a, x), y);
+            //System.out.print("x: ");
+            //Matrix.print(tempX);
+            res = function(a, tempX, sizeX1, ck, ckj);
+            //System.out.println("res: " + res);
+            if (res >= 0 && res < old_res && isProductionEnoughForConsumption(a, sizeX1, tempX, y) && isPollutionAllowed(a, sizeX1, tempX, y)) {
                 x = tempX;
-                bestRes = temp_res;
-            } else break;
-        } while (Math.abs(temp_res - bestRes) > eps);
-        return new Result(bestRes, a, x);
+            }
+        }
+        res = function(a, x, sizeX1, ck, ckj);
+        if (res < finalRes) {
+            finalRes = res;
+            finalA = a;
+            finalX = x;
+        }
     }
 
     private static double function(double[][] a, double[] x, int sizeX1, double[] ck, double[] ckj) {
@@ -146,7 +154,7 @@ public class Algorithm {
         return res;
     }
 
-    private static boolean pollutionLevelAllowed(double[][] a, int sizeX1, double[] x, double[] y) {
+    private static boolean isPollutionAllowed(double[][] a, int sizeX1, double[] x, double[] y) {
         double[] res = new double[sizeX1];
         for (int i = sizeX1; i < a.length; ++i) {
             for (int j = 0; j < sizeX1; ++j) {
@@ -173,7 +181,7 @@ public class Algorithm {
         return !(res1 < res2);
     }
 
-    private static boolean positiveSolutionsExist(double[][] a, int sizeX1, double[] y) {
+    private static boolean isPositiveSolutionsExist(double[][] a, int sizeX1, double[] y) {
         double[] res = new double[sizeX1];
         for (int i = sizeX1; i < a.length; i++) {
             for (int j = 0; j < sizeX1; j++) {
@@ -194,7 +202,7 @@ public class Algorithm {
         return !(res1 < res2);
     }
 
-    private static boolean productionEnoughForConsumption(double[][] a, int sizeX1, double[] x, double[] y) {
+    private static boolean isProductionEnoughForConsumption(double[][] a, int sizeX1, double[] x, double[] y) {
         double[] res = new double[sizeX1];
         for (int i = 0; i < sizeX1; i++) {
             for (int j = 0; j < sizeX1; j++) {
@@ -220,5 +228,5 @@ public class Algorithm {
         }
         res2 = Math.sqrt(res2);
         return !(res1 < res2);
-    }
+    }*/
 }

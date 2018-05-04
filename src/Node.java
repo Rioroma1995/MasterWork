@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class Node {
+class Node {
     private List<Double> value;
     private List<Node> nodes;
 
@@ -9,17 +9,18 @@ public class Node {
         this.value = value;
     }
 
-    public List<Node> getNodes() {
+    List<Node> getNodes() {
         return nodes;
     }
 
-    public List<Double> getValue() {
+    List<Double> getValue() {
         return value;
     }
 
-    public void addNode(Node node) {
-        if (nodes == null)
+    void addNode(Node node) {
+        if (nodes == null) {
             nodes = new ArrayList<>();
+        }
         nodes.add(node);
     }
 }
