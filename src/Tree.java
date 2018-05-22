@@ -39,11 +39,9 @@ class Tree {
     private void printArray(List<List<Double>> path, int len) {
         List<List<Double>> tempPath = new ArrayList<>();
         for (int i = 0; i < len; ++i) {
-            //System.out.print(path.get(i) + " ");
             tempPath.add(path.get(i));
         }
         finalPaths.add(tempPath);
-        //System.out.println("");
     }
 }
  

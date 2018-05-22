@@ -1,54 +1,29 @@
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
-public class Algorithm {
-    private static int dimA = 10;
-    private static int countOfProductionMethods = 3;
+class Algorithm {
 
-    public static void main(String[] args) {
-        double[] ck = {1.5, 1, 0.7, 2, 1.4};
-        double[] ckj = {0.2, 0.4, 0.3, 0.2, 0.2};
-        double[] y = {4, 5, 3, 4, 5, 0.4, 0.6, 0.7, 0.3, 0.6};
-        List<Double>[][] a = generate();
-        int productTypes = dimA / 2;
-
-        long startTime = System.nanoTime();
-        Optional<Result> result = solve(a, productTypes, y, ck, ckj);
-        long endTime = System.nanoTime();
-        System.out.println("Total time: " + TimeUnit.NANOSECONDS.toMillis(endTime - startTime));
-
-        result.ifPresent(res -> {
-            System.out.print("finalX: ");
-            Matrix.print(res.getVectorX());
-            System.out.println("finalA: ");
-            Matrix.print(res.getMatrixA());
-            System.out.print("finalRes: " + res.getResult());
-        });
+    static Optional<Result> solve(List<Double>[][] a, int sizeX1, double[] y, double[] ck, double[] ckj, final int dimA, final int countOfProductionMethods) {
+        Optional<Result> result = Optional.of(new Result(Integer.MAX_VALUE, null, y));
+        List<List<List<Double>>> paths = workWithTree(a, dimA, countOfProductionMethods);
+        for (List<List<Double>> path : paths) {
+            double[][] matrixA = new double[dimA][dimA];
+            for (int col = 0; col < path.size(); ++col) {
+                for (int row = 0; row < path.get(col).size(); ++row) {
+                    matrixA[row][col] = path.get(col).get(row);
+                }
+            }
+            if (Utils.checkedConditions(matrixA, sizeX1, y)) {
+                Optional<Result> res = Optional.of(Utils.calculate(matrixA, sizeX1, y, ck, ckj));
+                result = result.get().getResult() < res.get().getResult() ? result : res;
+            }
+        }
+        return result;
     }
 
-    private static Optional<Result> solve(List<Double>[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
-        long time = System.nanoTime();
-        List<List<List<Double>>> paths = workWithTree(a);
-        System.out.println("PATHS time = " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - time));
-        time = System.nanoTime();
-        Optional<Result> reduce = paths.parallelStream()
-                .map(path -> {
-                    double[][] matrixA = new double[dimA][dimA];
-                    for (int col = 0; col < path.size(); ++col) {
-                        for (int row = 0; row < path.get(col).size(); ++row) {
-                            matrixA[row][col] = path.get(col).get(row);
-                        }
-                    }
-                    return checkedConditions(matrixA, sizeX1, y) ? calculate(matrixA, sizeX1, y, ck, ckj) : null;
-                })
-                .filter(Objects::nonNull)
-                .reduce((result, result2) -> result.getResult() < result2.getResult() ? result : result2);
-        System.out.println("STREAMS time = " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - time));
-
-        return reduce;
-    }
-
-    private static List<List<List<Double>>> workWithTree(List<Double>[][] a) {
+    private static List<List<List<Double>>> workWithTree(List<Double>[][] a, final int dimA, final int countOfProductionMethods) {
         Tree tree = new Tree();
         tree.addRoot(new Node(null));
         List<Node> nodes = new ArrayList<>();
@@ -56,7 +31,7 @@ public class Algorithm {
         nodes.add(tree.getRoot());
         for (int col = 0; col < dimA; ++col) {
             for (Node nod : nodes) {
-                tempNodes.addAll(addBlockOfNodes(nod, a, col));
+                tempNodes.addAll(Utils.addBlockOfNodes(nod, a, col, countOfProductionMethods, dimA));
             }
             nodes = new ArrayList<>(tempNodes);
             Collections.copy(nodes, tempNodes);
@@ -65,160 +40,11 @@ public class Algorithm {
         return tree.printPaths(tree.getRoot());
     }
 
-    private static List<Node> addBlockOfNodes(Node parentNode, List<Double>[][] a, int col) {
-        List<Node> array = new ArrayList<>();
-        for (int k = 0; k < countOfProductionMethods; ++k) {
-            array.add(addInsideNodes(parentNode, a, col, k));
-        }
-        return array;
-    }
-
-    private static Node addInsideNodes(Node parentNode, List<Double>[][] a, int col, int insideCol) {
-        List<Double> array = new ArrayList<>(dimA);
-        for (int j = 0; j < dimA; ++j) {
-            array.add(a[j][col].get(insideCol));
-        }
-        Node node = new Node(array);
-        parentNode.addNode(node);
-        return node;
-    }
-
     static double[] solve(double[][] a11, double[][] a12, double[][] a21, double[][] a22, int sizeX1, double[] y, double[] ck, double[] ckj) {
         double[][] a = Matrix.buildA(a11, a12, a21, a22);
-        if (checkedConditions(a, sizeX1, y)) {
-            calculate(a, sizeX1, y, ck, ckj);
+        if (Utils.checkedConditions(a, sizeX1, y)) {
+            Utils.calculate(a, sizeX1, y, ck, ckj);
         }
         return null;
-    }
-
-    private static List<Double>[][] generate() {
-        List<Double>[][] a = new ArrayList[dimA][dimA];
-        double l = 0;
-        for (int i = 0; i < dimA; ++i) {
-            for (int j = 0; j < dimA; ++j) {
-                a[i][j] = new ArrayList<>(countOfProductionMethods);
-                for (int k = 0; k < countOfProductionMethods; ++k) {
-                    a[i][j].add(l++);
-                    //a[i][j].add(Math.random() / dimA);
-                }
-            }
-        }
-        return a;
-    }
-
-    private static boolean checkedConditions(double[][] a, int sizeX1, double[] y) {
-        return positiveSolutionsExist(a, sizeX1, y) && productionEnoughForConsumption(a, sizeX1, y, y) && pollutionLevelAllowed(a, sizeX1, y, y);
-    }
-
-    private static Result calculate(double[][] a, int sizeX1, double[] y, double[] ck, double[] ckj) {
-        double[] x = y;
-        double[] tempX;
-        double bestRes = function(a, x, sizeX1, ck, ckj); //initial res when х=у
-        double temp_res;
-        final double eps = 0.05;
-        do {
-            tempX = Matrix.add(Matrix.multiply(a, x), y); //x=Ax+y
-            temp_res = function(a, tempX, sizeX1, ck, ckj);
-            if (temp_res >= 0 && temp_res < bestRes && productionEnoughForConsumption(a, sizeX1, tempX, y) && pollutionLevelAllowed(a, sizeX1, tempX, y)) {
-                x = tempX;
-                bestRes = temp_res;
-            } else break;
-        } while (Math.abs(temp_res - bestRes) > eps);
-        return new Result(bestRes, a, x);
-    }
-
-    private static double function(double[][] a, double[] x, int sizeX1, double[] ck, double[] ckj) {
-        double res = 0;
-        for (int i = 0; i < ck.length; ++i) {
-            double tempRes = 0;
-            for (int j = 0; j < sizeX1; ++j) {
-                tempRes += a[sizeX1 + i][j] * x[j];
-            }
-            for (int j = sizeX1; j < x.length; ++j) {
-                if (j - sizeX1 != i) {
-                    tempRes += a[sizeX1 + i][j] * x[j];
-                } else {
-                    tempRes += (a[sizeX1 + i][j] - 1 + ckj[i] / ck[i]) * x[j];
-                }
-            }
-            res += tempRes * ck[i];
-        }
-        return res;
-    }
-
-    private static boolean pollutionLevelAllowed(double[][] a, int sizeX1, double[] x, double[] y) {
-        double[] res = new double[sizeX1];
-        for (int i = sizeX1; i < a.length; ++i) {
-            for (int j = 0; j < sizeX1; ++j) {
-                res[i - sizeX1] += a[i][j] * x[j];
-            }
-        }
-        double[] tempRes = new double[sizeX1];
-        for (int i = sizeX1; i < a.length; ++i) {
-            for (int j = sizeX1; j < a.length; ++j) {
-                tempRes[i - sizeX1] += (1 - a[i][j]) * x[j];
-            }
-        }
-        res = Matrix.subtract(tempRes, res);
-        double res1 = 0;
-        double res2 = 0;
-        for (double re : res) {
-            res1 += re * re;
-        }
-        res1 = Math.sqrt(res1);
-        for (int i = sizeX1; i < y.length; i++) {
-            res2 += y[i] * y[i];
-        }
-        res2 = Math.sqrt(res2);
-        return !(res1 < res2);
-    }
-
-    private static boolean positiveSolutionsExist(double[][] a, int sizeX1, double[] y) {
-        double[] res = new double[sizeX1];
-        for (int i = sizeX1; i < a.length; i++) {
-            for (int j = 0; j < sizeX1; j++) {
-                res[i - sizeX1] += a[i][j] * y[j];
-            }
-        }
-        double res1 = 0;
-        double res2 = 0;
-        for (double re : res) {
-            res1 += re * re;
-        }
-        res1 = Math.sqrt(res1);
-
-        for (int i = sizeX1; i < y.length; i++) {
-            res2 += y[i] * y[i];
-        }
-        res2 = Math.sqrt(res2);
-        return !(res1 < res2);
-    }
-
-    private static boolean productionEnoughForConsumption(double[][] a, int sizeX1, double[] x, double[] y) {
-        double[] res = new double[sizeX1];
-        for (int i = 0; i < sizeX1; i++) {
-            for (int j = 0; j < sizeX1; j++) {
-                res[i] += (1 - a[i][j]) * x[j];
-            }
-        }
-        double[] tempRes = new double[sizeX1];
-        for (int i = 0; i < sizeX1; i++) {
-            for (int j = sizeX1; j < a.length; j++) {
-                tempRes[i] += a[i][j] * x[j];
-            }
-        }
-        res = Matrix.subtract(res, tempRes);
-        double res1 = 0;
-        double res2 = 0;
-        for (double re : res) {
-            res1 += re * re;
-        }
-        res1 = Math.sqrt(res1);
-
-        for (int i = 0; i < sizeX1; i++) {
-            res2 += y[i] * y[i];
-        }
-        res2 = Math.sqrt(res2);
-        return !(res1 < res2);
     }
 }

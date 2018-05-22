@@ -7,7 +7,7 @@ public class Result {
     private double[][] matrixA;
     private double[] vectorX;
 
-    public Result(double result, double[][] matrixA, double[] vectorX) {
+    Result(double result, double[][] matrixA, double[] vectorX) {
         this.result = result;
         this.matrixA = matrixA;
         this.vectorX = vectorX;
