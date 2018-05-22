@@ -71,18 +71,6 @@ public class Matrix {
         System.out.println();
     }
 
-    public static double[][] incidenceMatrix(double[][] a) {
-        int m = a.length;
-        int n = a[0].length;
-        double[][] b = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                b[i][j] = (a[i][j] != 0 ? 1 : 0);
-            }
-        }
-        return b;
-    }
-
     static double[][] buildA(double[][] a11, double[][] a12, double[][] a21, double[][] a22) {
         int col = a11.length + a21.length;
         int row = a11[0].length + a12[0].length;
